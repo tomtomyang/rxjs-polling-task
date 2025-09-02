@@ -1,0 +1,29 @@
+{
+  "name": "rxjs-polling",
+  "version": "1.0.0",
+  "description": "基于 RxJS 的轮询任务管理器",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "ts-node test-simple-task.ts",
+    "server": "node mock-server.js"
+  },
+  "keywords": [
+    "rxjs",
+    "polling",
+    "task",
+    "management"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.2",
+    "express": "^4.21.2",
+    "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.9.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.3.2"
+  }
+}
