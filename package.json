@@ -1,5 +1,5 @@
 {
-  "name": "rxjs-polling",
+  "name": "rxjs-polling-task",
   "version": "1.0.0",
   "description": "基于 RxJS 的轮询任务管理器",
   "main": "dist/index.js",
