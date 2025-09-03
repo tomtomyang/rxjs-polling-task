@@ -87,10 +87,7 @@ export class SimpleTask {
               })
             )
           ),
-          takeWhile(
-            (response: TaskResponse) => !response.data && response.code !== 1,
-            true
-          )
+          takeWhile((response: TaskResponse) => !response.data, true)
         );
       }),
       takeUntil(
@@ -113,8 +110,6 @@ export class SimpleTask {
     if (this._cancelSubject && !this._cancelSubject.closed) {
       this._cancelSubject.next();
       this._cancelSubject.complete();
-
-      this._cancelSubject = undefined;
     }
   }
 }
