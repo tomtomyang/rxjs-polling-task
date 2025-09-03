@@ -1,15 +1,13 @@
 import axios from "axios";
-import { from, Observable, throwError, timer } from "rxjs";
-import { map, switchMap, takeUntil, takeWhile, tap } from "rxjs/operators";
-
-export enum TaskStatus {
-  IDLE = "idle", // 空闲状态
-  PENDING = "pending", // 等待中
-  RUNNING = "running", // 执行中
-  COMPLETED = "completed", // 已完成
-  FAILED = "failed", // 失败
-  TIMEOUT = "timeout", // 超时
-}
+import { from, Observable, Subject, throwError, timer } from "rxjs";
+import {
+  catchError,
+  concatMap,
+  map,
+  switchMap,
+  takeUntil,
+  takeWhile,
+} from "rxjs/operators";
 
 export interface TaskResponse {
   taskId: string;
@@ -25,10 +23,11 @@ export interface StartTaskRequest {
 
 export class SimpleTask {
   id: string;
-  status: TaskStatus = TaskStatus.IDLE;
 
-  private _pollingInterval: number;
   private _timeout: number;
+  private _pollingInterval: number;
+
+  private _cancelSubject?: Subject<void>; // 取消信号
 
   constructor({
     id,
@@ -43,10 +42,6 @@ export class SimpleTask {
     this._timeout = config.timeout || 30000;
   }
 
-  private _reset() {
-    this.status = TaskStatus.IDLE;
-  }
-
   private _callStart(request: StartTaskRequest) {
     return axios.post(`http://localhost:3000/api/tasks/start`, request);
   }
@@ -56,42 +51,42 @@ export class SimpleTask {
   }
 
   run(request: StartTaskRequest): Observable<TaskResponse> {
-    this._reset();
+    if (this._cancelSubject && !this._cancelSubject.closed) {
+      this._cancelSubject.next();
+      this._cancelSubject.complete();
+    }
 
-    this.status = TaskStatus.PENDING;
+    this._cancelSubject = new Subject<void>();
 
     // 启动任务
     const task$ = from(this._callStart(request)).pipe(
       map((response: any) => response.data),
-      tap((initialResponse: TaskResponse) => {
-        if (initialResponse.code === 1) {
-          // 启动任务失败
-          this.status = TaskStatus.FAILED;
-        } else {
-          this.status = TaskStatus.RUNNING;
-        }
+      catchError((error: any) => {
+        return throwError(
+          () => new Error(`start task failed: ${error.message}`)
+        );
       }),
       // 轮询任务状态
       switchMap((initialResponse: TaskResponse) => {
+        // 判断任务是否启动失败
         if (initialResponse.code === 1) {
-          return [initialResponse];
+          return throwError(
+            () => new Error(initialResponse.message || "start task failed")
+          );
         }
 
         // 开始轮询
         return timer(0, this._pollingInterval).pipe(
-          switchMap(() =>
+          concatMap(() =>
             from(this._callQuery(initialResponse.taskId)).pipe(
-              map((res: any) => res.data)
+              map((res: any) => res.data),
+              catchError((error: any) => {
+                return throwError(
+                  () => new Error(`query task failed: ${error.message}`)
+                );
+              })
             )
           ),
-          tap((response: TaskResponse) => {
-            if (response.code === 0 && response.data) {
-              this.status = TaskStatus.COMPLETED;
-            } else if (response.code === 1) {
-              this.status = TaskStatus.FAILED;
-            }
-            // 如果还是 pending 或 running，SimpleTask 保持 RUNNING 状态
-          }),
           takeWhile(
             (response: TaskResponse) => !response.data && response.code !== 1,
             true
@@ -100,14 +95,26 @@ export class SimpleTask {
       }),
       takeUntil(
         timer(this._timeout).pipe(
-          tap(() => {
-            this.status = TaskStatus.TIMEOUT;
-          }),
           switchMap(() => throwError(() => new Error(`task execute timeout`)))
+        )
+      ),
+      // 取消逻辑
+      takeUntil(
+        this._cancelSubject.pipe(
+          switchMap(() => throwError(() => new Error("task cancelled")))
         )
       )
     );
 
     return task$;
+  }
+
+  cancel(): void {
+    if (this._cancelSubject && !this._cancelSubject.closed) {
+      this._cancelSubject.next();
+      this._cancelSubject.complete();
+
+      this._cancelSubject = undefined;
+    }
   }
 }

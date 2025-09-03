@@ -116,15 +116,6 @@ app.get('/api/tasks', (req, res) => {
   res.json(allTasks);
 });
 
-// 健康检查接口
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    tasksCount: tasks.size
-  });
-});
-
 // 启动服务器
 app.listen(port, () => {
   console.log(`Mock API 服务器启动成功！`);

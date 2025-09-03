@@ -1,12 +1,6 @@
 import { SimpleTask } from "./src/simple-task";
 
 // 任务 1
-console.log("任务 1 开始");
-const normalRequest = {
-  type: "data-processing",
-  params: { file: "normal.csv" },
-};
-
 const task1 = new SimpleTask({
   id: "1",
   config: {
@@ -15,19 +9,44 @@ const task1 = new SimpleTask({
   },
 });
 
-task1.run(normalRequest).subscribe({
-  next: (response) => {
-    console.log(
-      `任务 1 状态: ${JSON.stringify(task1.status)} ${JSON.stringify(response)}`
-    );
-  },
-  error: (error) =>
-    console.error(
-      "任务 1 错误:",
-      `${JSON.stringify(task1.status)} ${JSON.stringify(error.message)}`
-    ),
-  complete: () => console.log("任务 1 完成", `${JSON.stringify(task1.status)}`),
-});
+console.log("任务 1 开始");
+
+task1
+  .run({
+    type: "data-processing",
+    params: { file: "normal.csv" },
+  })
+  .subscribe({
+    next: (response) => {
+      console.log(`任务 1 执行: ${JSON.stringify(response)}`);
+    },
+    error: (error) =>
+      console.error("任务 1 错误:", `${JSON.stringify(error.message)}`),
+    complete: () => console.log("任务 1 完成"),
+  });
+
+setTimeout(() => {
+  console.log("任务 1 重新开始");
+  task1
+    .run({
+      type: "data-processing",
+      params: { file: "normal.csv" },
+    })
+    .subscribe({
+      next: (response) => {
+        console.log(`任务 1 执行: ${JSON.stringify(response)}`);
+      },
+      error: (error) =>
+        console.error("任务 1 错误:", `${JSON.stringify(error.message)}`),
+      complete: () => console.log("任务 1 完成"),
+    });
+}, 3000);
+
+setTimeout(() => {
+  console.log("任务 1 取消");
+
+  task1.cancel();
+}, 5000);
 
 // // 测试2: 超时任务
 // setTimeout(() => {
