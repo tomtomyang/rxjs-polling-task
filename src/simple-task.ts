@@ -3,6 +3,7 @@ import { from, Observable, Subject, throwError, timer } from "rxjs";
 import {
   catchError,
   concatMap,
+  finalize,
   map,
   share,
   switchMap,
@@ -108,6 +109,10 @@ export class SimpleTask {
         resetOnRefCountZero: false,
         resetOnComplete: false,
         resetOnError: false,
+      }),
+      finalize(() => {
+        this._cancelSubject = undefined;
+        this._task$ = undefined;
       })
     );
 
@@ -119,5 +124,8 @@ export class SimpleTask {
       this._cancelSubject.next();
       this._cancelSubject.complete();
     }
+
+    this._cancelSubject = undefined;
+    this._task$ = undefined;
   }
 }
