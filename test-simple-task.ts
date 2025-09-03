@@ -9,9 +9,8 @@ const task1 = new SimpleTask({
   },
 });
 
-console.log("任务 1 开始");
-
-const task1$ = task1.run({ type: "normal", params: {} });
+const task1$ = task1.create({ type: "normal", params: {} });
+console.log("任务 1 初始化");
 
 const task1Sub1 = task1$.subscribe({
   next: (response) => {
@@ -30,16 +29,6 @@ const task1Sub2 = task1$.subscribe({
     console.error("订阅 2 任务 1 错误:", `${JSON.stringify(error.message)}`),
   complete: () => console.log("订阅 2 任务 1 完成"),
 });
-
-setTimeout(() => {
-  console.log("任务 1 取消");
-  task1.cancel();
-}, 1000);
-
-setTimeout(() => {
-  console.log("任务 1 重新开始");
-  task1.run({ type: "normal", params: {} });
-}, 2000);
 
 setTimeout(() => {
   console.log("任务 1 订阅 1 取消");

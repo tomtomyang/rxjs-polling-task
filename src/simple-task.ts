@@ -1,11 +1,9 @@
 import axios from "axios";
-import { from, Observable, Subject, throwError, timer } from "rxjs";
+import { defer, from, Observable, throwError, timer } from "rxjs";
 import {
   catchError,
   concatMap,
-  finalize,
   map,
-  share,
   switchMap,
   takeUntil,
   takeWhile,
@@ -29,9 +27,6 @@ export class SimpleTask {
   private _timeout: number;
   private _pollingInterval: number;
 
-  private _task$?: Observable<TaskResponse>;
-  private _cancelSubject?: Subject<void>; // 取消信号
-
   constructor({
     id,
     config,
@@ -46,6 +41,7 @@ export class SimpleTask {
   }
 
   private _callStart(request: StartTaskRequest) {
+    console.log("callStart", request);
     return axios.post(`http://localhost:3000/api/tasks/start`, request);
   }
 
@@ -53,15 +49,8 @@ export class SimpleTask {
     return axios.get(`http://localhost:3000/api/tasks/${taskId}`);
   }
 
-  run(request: StartTaskRequest): Observable<TaskResponse> {
-    if (this._cancelSubject && !this._cancelSubject.closed) {
-      this._cancelSubject.next();
-      this._cancelSubject.complete();
-    }
-
-    this._cancelSubject = new Subject<void>();
-
-    this._task$ = from(this._callStart(request)).pipe(
+  create(request: StartTaskRequest): Observable<TaskResponse> {
+    return defer(() => from(this._callStart(request))).pipe(
       map((response: any) => response.data),
       catchError((error: any) => {
         return throwError(
@@ -97,35 +86,7 @@ export class SimpleTask {
         timer(this._timeout).pipe(
           switchMap(() => throwError(() => new Error(`task execute timeout`)))
         )
-      ),
-      // 取消处理
-      takeUntil(
-        this._cancelSubject.pipe(
-          switchMap(() => throwError(() => new Error("task cancelled")))
-        )
-      ),
-      // 使用 share() 实现多订阅共享同一个流
-      share({
-        resetOnRefCountZero: false,
-        resetOnComplete: false,
-        resetOnError: false,
-      }),
-      finalize(() => {
-        this._cancelSubject = undefined;
-        this._task$ = undefined;
-      })
+      )
     );
-
-    return this._task$;
-  }
-
-  cancel(): void {
-    if (this._cancelSubject && !this._cancelSubject.closed) {
-      this._cancelSubject.next();
-      this._cancelSubject.complete();
-    }
-
-    this._cancelSubject = undefined;
-    this._task$ = undefined;
   }
 }
