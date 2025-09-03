@@ -31,14 +31,7 @@ const taskStatus$ = timer(0, 1000).pipe(
 
 ### RxJS 的核心思想：一切皆流
 
-在 RxJS 中，**所有的异步操作都被抽象为 Observable 流**：
-
-- 🌊 **HTTP 请求** → Observable 流
-- ⏰ **定时器** → Observable 流
-- 🎯 **用户事件** → Observable 流
-- 📡 **轮询操作** → Observable 流
-
-这种统一的抽象让我们可以用**相同的操作符**来处理不同类型的异步操作。
+在 RxJS 中，**所有的异步操作都被抽象为 Observable 流**，这种统一的抽象让我们可以用**相同的操作符**来处理不同类型的异步操作。
 
 ## 核心 RxJS 操作符
 
