@@ -173,6 +173,7 @@ app.get('/api/tasks/:taskId', async (req, res) => {
 app.listen(port, () => {
   console.log(`🚀 Mock API 服务器启动成功！`);
   console.log(`📍 地址: http://localhost:${port}`);
+  console.log(``);
   console.log(`📋 可用接口:`);
   console.log(`   POST /api/tasks/start  - 启动任务`);
   console.log(`   GET  /api/tasks/:id    - 查询任务状态`);

@@ -4,6 +4,7 @@ import {
   catchError,
   concatMap,
   map,
+  share,
   switchMap,
   takeUntil,
   takeWhile,
@@ -27,6 +28,7 @@ export class SimpleTask {
   private _timeout: number;
   private _pollingInterval: number;
 
+  private _task$?: Observable<TaskResponse>;
   private _cancelSubject?: Subject<void>; // 取消信号
 
   constructor({
@@ -58,8 +60,7 @@ export class SimpleTask {
 
     this._cancelSubject = new Subject<void>();
 
-    // 启动任务
-    const task$ = from(this._callStart(request)).pipe(
+    this._task$ = from(this._callStart(request)).pipe(
       map((response: any) => response.data),
       catchError((error: any) => {
         return throwError(
@@ -90,20 +91,27 @@ export class SimpleTask {
           takeWhile((response: TaskResponse) => !response.data, true)
         );
       }),
+      // 超时处理
       takeUntil(
         timer(this._timeout).pipe(
           switchMap(() => throwError(() => new Error(`task execute timeout`)))
         )
       ),
-      // 取消逻辑
+      // 取消处理
       takeUntil(
         this._cancelSubject.pipe(
           switchMap(() => throwError(() => new Error("task cancelled")))
         )
-      )
+      ),
+      // 使用 share() 实现多订阅共享同一个流
+      share({
+        resetOnRefCountZero: false,
+        resetOnComplete: false,
+        resetOnError: false,
+      })
     );
 
-    return task$;
+    return this._task$;
   }
 
   cancel(): void {
