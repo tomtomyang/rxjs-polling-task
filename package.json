@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "test": "ts-node test-simple-task.ts",
+    "test": "ts-node test-demo-task.ts",
     "server": "node mock-server.js"
   },
   "keywords": [

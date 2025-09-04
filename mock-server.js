@@ -180,7 +180,7 @@ app.listen(port, () => {
   console.log(``);
   console.log(`📝 测试场景:`);
   console.log(`   type: "normal"        - 正常流程`);
-  console.log(`   type: "slow"      - 启动和查询接口慢响应`);
+  console.log(`   type: "slow"          - 启动和查询接口慢响应`);
   console.log(`   type: "start-500"     - 启动接口500错误`);
   console.log(`   type: "start-code-1"  - 启动接口业务失败`);
   console.log(`   type: "start-slow"    - 启动接口慢响应`);

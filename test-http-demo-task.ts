@@ -1,7 +1,7 @@
-import { SimpleTask } from "./src/simple-task";
+import { HttpDemoTask } from "./src/http-demo-task";
 
 // 任务 1
-const task1 = new SimpleTask({
+const task1 = new HttpDemoTask({
   id: "1",
   config: {
     pollingInterval: 1000,
@@ -9,7 +9,7 @@ const task1 = new SimpleTask({
   },
 });
 
-const task1$ = task1.create({ type: "normal", params: {} });
+const task1$ = task1.create({ startParams: { type: "normal" } });
 console.log("任务 1 初始化");
 
 const task1Sub1 = task1$.subscribe({

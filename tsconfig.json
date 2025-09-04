@@ -13,6 +13,6 @@
     "declarationMap": true,
     "sourceMap": true
   },
-  "include": ["src/**/*", "test-simple-task.ts"],
+  "include": ["src/**/*", "test-http-demo-task.ts"],
   "exclude": ["node_modules", "dist"]
 }
